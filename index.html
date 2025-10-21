@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>📋 مشروع PIE - OFPPT Offshore</title>
+  <title>📋 تقييم مشكلة الكراسي - OFPPT Offshore</title>
   <style>
     body {
       background: linear-gradient(120deg, #1e90ff, #f0f8ff);
@@ -65,140 +65,86 @@
       background: #005bbb;
     }
     .hidden { display: none; }
-
-    .issue {
-      background: #f4f9ff;
-      border-radius: 10px;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #dce9ff;
-    }
-
-    .admin-btn {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      background: transparent;
-      border: none;
-      font-size: 26px;
-      cursor: pointer;
-      color: #fff;
-    }
   </style>
 </head>
 <body>
 
   <header>
-    🧭 منصة جمع مشاكل الطلبة - OFPPT Offshore
+    🧭 تقييم مشكلة الكراسي - OFPPT Offshore
   </header>
 
-  <button class="admin-btn" id="adminEye">👁️</button>
-
   <div class="container">
-    <h2>📨 أرسل المشكل الذي تواجهه</h2>
-    <form id="issueForm">
-      <label>🔢 رقمك (استعمل رقم تسلسلي فقط)</label>
-      <input type="number" id="userNumber" required min="1" placeholder="مثال: 12">
+    <h2>📨 المشكلة:</h2>
+    <p>هل تعاني من الكراسي؟</p>
 
-      <label>🏫 المؤسسة</label>
-      <input type="text" id="school" value="OFPPT - Offshore" readonly>
+    <form id="responseForm">
+      <label>✅ نعم / ❌ لا</label>
+      <select id="issueAnswer" required>
+        <option value="">اختر الإجابة</option>
+        <option value="نعم">نعم</option>
+        <option value="لا">لا</option>
+      </select>
 
-      <label>📝 وصف المشكل</label>
-      <textarea id="problem" placeholder="اكتب هنا المشكل الذي تواجهه..." required></textarea>
-
-      <label>💡 حلول ممكنة (من 1 إلى 3)</label>
-      <textarea id="solutions" placeholder="اكتب حلولك المقترحة..." required></textarea>
+      <label id="solutionsLabel" class="hidden">💡 حلول ممكنة (1 إلى 3)</label>
+      <textarea id="userSolutions" placeholder="اكتب حلولك المقترحة..." class="hidden"></textarea>
 
       <button type="submit">إرسال ✅</button>
     </form>
   </div>
 
-  <!-- لوحة المشرف -->
-  <div class="container hidden" id="adminPanel">
-    <h2>🧑‍💼 لوحة المشرف</h2>
-    <div id="adminArea"></div>
-  </div>
+  <!-- EmailJS SDK الجديد -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <script>
-    const ADMIN_CODE = "pie102";
-    const adminEye = document.getElementById("adminEye");
-    const adminPanel = document.getElementById("adminPanel");
-    const adminArea = document.getElementById("adminArea");
-    const form = document.getElementById("issueForm");
+    // تهيئة EmailJS
+    emailjs.init("WDlAyf26rsha6Qajm"); // 👈 Public Key ديالك
 
-    // عند إرسال المشكلة
-    form.addEventListener("submit", (e) => {
+    const form = document.getElementById("responseForm");
+    const issueAnswer = document.getElementById("issueAnswer");
+    const userSolutions = document.getElementById("userSolutions");
+    const solutionsLabel = document.getElementById("solutionsLabel");
+
+    // إظهار أو إخفاء حقل الحلول
+    issueAnswer.addEventListener("change", () => {
+      if (issueAnswer.value === "نعم") {
+        userSolutions.classList.remove("hidden");
+        solutionsLabel.classList.remove("hidden");
+      } else {
+        userSolutions.classList.add("hidden");
+        solutionsLabel.classList.add("hidden");
+        userSolutions.value = "";
+      }
+    });
+
+    // إرسال البيانات عبر EmailJS
+    form.addEventListener("submit", function(e) {
       e.preventDefault();
 
-      const problem = document.getElementById("problem").value.trim();
-      const solutions = document.getElementById("solutions").value.trim();
-      const user = document.getElementById("userNumber").value;
+      const answer = issueAnswer.value;
+      const solutions = userSolutions.value.trim() || "لا توجد حلول";
+      const date = new Date().toLocaleString();
 
-      // منع الكلمات الممنوعة
-      const banned = ["transport","bus","tobis","tobisat","treq","tronspor"];
-      const lower = problem.toLowerCase();
-      if (banned.some(w => lower.includes(w))) {
-        alert("🚫 يمنع الحديث عن مشكل النقل أو المواضيع المشابهة.");
-        return;
-      }
-
-      const issue = {
-        user: `المستخدم رقم ${user}`,
-        school: "OFPPT - Offshore",
-        text: problem,
+      const templateParams = {
+        issue: "هل تعاني من الكراسي؟",
+        answer: answer,
         solutions: solutions,
-        date: new Date().toLocaleString()
+        date: date
       };
 
-      const data = JSON.parse(localStorage.getItem("issuesData") || "[]");
-      data.push(issue);
-      localStorage.setItem("issuesData", JSON.stringify(data));
-
-      alert("✅ تم حفظ المشكلة بنجاح!");
-      form.reset();
+      emailjs.send("service_ldy79am", "template_5s20bcy", templateParams)
+        .then(() => {
+          alert("✅ تم إرسال الإجابة بنجاح! شكراً على مشاركتك 🙌");
+          form.reset();
+          userSolutions.classList.add("hidden");
+          solutionsLabel.classList.add("hidden");
+        })
+        .catch((err) => {
+          console.error("EmailJS Error:", err);
+          alert("❌ حدث خطأ أثناء الإرسال، تحقق من Console");
+        });
     });
-
-    // وظيفة عرض لوحة المشرف
-    adminEye.addEventListener("click", ()=>{
-      const code = prompt("رمز المشرف:");
-      if(code === ADMIN_CODE){
-        adminPanel.classList.remove("hidden");
-        renderAdmin();
-        alert("✅ مرحبًا بك أيها المشرف");
-        adminPanel.scrollIntoView({behavior:"smooth"});
-      } else {
-        alert("❌ الكود غير صحيح");
-      }
-    });
-
-    // عرض الملاحظات وتحميل JSON
-    function renderAdmin(){
-      const issues = JSON.parse(localStorage.getItem("issuesData") || "[]");
-      adminArea.innerHTML = `
-        <h3>📋 الملاحظات المسجلة (${issues.length})</h3>
-        <button id="downloadJson">💾 تحميل JSON</button>
-        <div id="issuesList">
-          ${issues.length ? issues.map(i => `
-            <div class="issue">
-              <p><strong>${i.user}</strong> (${i.date})</p>
-              <p>📍 المؤسسة: ${i.school}</p>
-              <p>📝 ${i.text}</p>
-              <p>💡 حلول: ${i.solutions}</p>
-            </div>
-          `).join('') : "<p>🚫 لا توجد مشاكل مسجلة بعد.</p>"}
-        </div>
-      `;
-
-      document.getElementById("downloadJson").addEventListener("click", ()=>{
-        const blob = new Blob([JSON.stringify(issues, null, 2)], {type:"application/json"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "issues_ofppt_offshore.json";
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-    }
   </script>
+
 </body>
 </html>
+
