@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>📋 PIE PROJECT - OFPPT Offshore</title>
+  <title>📋 تقييم مشكلة المقاعد - OFPPT Offshore</title>
   <style>
     body {
       background: linear-gradient(120deg, #1e90ff, #f0f8ff);
@@ -48,7 +49,7 @@
     }
     textarea {
       resize: none;
-      height: 80px;
+      height: 60px;
     }
     button {
       background: #1e90ff;
@@ -70,7 +71,7 @@
 <body>
 
   <header>
-    🧭 PIE PROJECT - OFPPT Offshore
+    🧭 تقييم مشكلة المقاعد - OFPPT Offshore
   </header>
 
   <div class="container">
@@ -85,49 +86,55 @@
         <option value="لا">لا</option>
       </select>
 
-      <label id="solutionsLabel" class="hidden">💡 حلول ممكنة (1 إلى 3)</label>
-      <textarea id="userSolutions" placeholder="اكتب حلولك المقترحة..." class="hidden"></textarea>
+      <div id="solutionsContainer" class="hidden">
+        <label>💡 اكتب 1 إلى 3 حلول:</label>
+        <textarea id="solution1" placeholder="الحل الأول..."></textarea>
+        <textarea id="solution2" placeholder="الحل الثاني..."></textarea>
+        <textarea id="solution3" placeholder="الحل الثالث..."></textarea>
+      </div>
 
       <button type="submit">إرسال ✅</button>
     </form>
   </div>
 
-  <!-- EmailJS SDK الجديد -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
   <script>
-    // تهيئة EmailJS
-    emailjs.init("WDlAyf26rsha6Qajm"); // 👈 Public Key ديالك
+    emailjs.init("WDlAyf26rsha6Qajm"); // مفتاحك العام
 
     const form = document.getElementById("responseForm");
     const issueAnswer = document.getElementById("issueAnswer");
-    const userSolutions = document.getElementById("userSolutions");
-    const solutionsLabel = document.getElementById("solutionsLabel");
+    const solutionsContainer = document.getElementById("solutionsContainer");
 
-    // إظهار أو إخفاء حقل الحلول
     issueAnswer.addEventListener("change", () => {
       if (issueAnswer.value === "نعم") {
-        userSolutions.classList.remove("hidden");
-        solutionsLabel.classList.remove("hidden");
+        solutionsContainer.classList.remove("hidden");
       } else {
-        userSolutions.classList.add("hidden");
-        solutionsLabel.classList.add("hidden");
-        userSolutions.value = "";
+        solutionsContainer.classList.add("hidden");
+        document.getElementById("solution1").value = "";
+        document.getElementById("solution2").value = "";
+        document.getElementById("solution3").value = "";
       }
     });
 
-    // إرسال البيانات عبر EmailJS
-    form.addEventListener("submit", function(e) {
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
 
       const answer = issueAnswer.value;
-      const solutions = userSolutions.value.trim() || "لا توجد حلول";
+      const sol1 = document.getElementById("solution1").value.trim();
+      const sol2 = document.getElementById("solution2").value.trim();
+      const sol3 = document.getElementById("solution3").value.trim();
       const date = new Date().toLocaleString();
+
+      const solutionsText = answer === "نعم"
+        ? `${sol1 || "لا يوجد"} | ${sol2 || "لا يوجد"} | ${sol3 || "لا يوجد"}`
+        : "❌ المستخدم لا يعاني من المشكلة";
 
       const templateParams = {
         issue: "هل تعاني من الكراسي؟",
         answer: answer,
-        solutions: solutions,
+        solutions: solutionsText,
         date: date
       };
 
@@ -135,8 +142,7 @@
         .then(() => {
           alert("✅ تم إرسال الإجابة بنجاح! شكراً على مشاركتك 🙌");
           form.reset();
-          userSolutions.classList.add("hidden");
-          solutionsLabel.classList.add("hidden");
+          solutionsContainer.classList.add("hidden");
         })
         .catch((err) => {
           console.error("EmailJS Error:", err);
@@ -147,4 +153,3 @@
 
 </body>
 </html>
-
